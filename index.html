@@ -1,0 +1,2945 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard IPM & Kemiskinan Indonesia</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* ============================================================
+   DESIGN SYSTEM — Dark Navy + Glassmorphism
+   ============================================================ */
+    :root {
+      --navy-950: #f8fafc;
+      --navy-900: #ffffff;
+      --navy-850: #f1f5f9;
+      --navy-800: #e2e8f0;
+      --navy-700: #cbd5e1;
+      --navy-600: #94a3b8;
+      --navy-500: #64748b;
+
+      --glass-bg: rgba(0, 0, 0, 0.02);
+      --glass-border: rgba(0, 0, 0, 0.06);
+      --glass-hover: rgba(0, 0, 0, 0.04);
+
+      --accent-blue: #2563eb;
+      --accent-cyan: #0891b2;
+      --accent-green: #16a34a;
+      --accent-amber: #d97706;
+      --accent-red: #dc2626;
+      --accent-purple: #9333ea;
+
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+      --shadow-glow-blue: 0 0 20px rgba(37, 99, 235, 0.15);
+      --shadow-glow-cyan: 0 0 20px rgba(8, 145, 178, 0.15);
+
+      --sidebar-w: 340px;
+      --header-h: 56px;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --transition: all .25s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: var(--navy-900);
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    /* ============================================================
+   LAYOUT
+   ============================================================ */
+    #app {
+      display: grid;
+      grid-template-rows: var(--header-h) 1fr;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-areas:
+        "header header"
+        "sidebar main";
+      height: 100vh;
+      overflow: hidden;
+      transition: grid-template-columns .35s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    #app.sidebar-collapsed {
+      grid-template-columns: 0px 1fr;
+    }
+
+    #app.sidebar-collapsed #sidebar {
+      transform: translateX(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── HEADER ── */
+    #header {
+      grid-area: header;
+      background: var(--navy-900);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05), 0 1px 0 rgba(37, 99, 235, 0.05);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .header-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: var(--shadow-glow-blue);
+    }
+
+    .header-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -.01em;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .header-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--glass-border);
+      margin: 0 4px;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+    }
+
+    .header-badge {
+      background: rgba(59, 130, 246, .15);
+      border: 1px solid rgba(59, 130, 246, .3);
+      color: var(--accent-blue);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .header-spacer {
+      flex: 1;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .year-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 5px 12px;
+    }
+
+    .year-control label {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .year-select {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .year-select option {
+      background: var(--navy-800);
+    }
+
+    .mode-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: var(--transition);
+    }
+
+    .mode-btn:hover,
+    .mode-btn.active {
+      background: rgba(59, 130, 246, .15);
+      border-color: rgba(59, 130, 246, .4);
+      color: var(--accent-blue);
+    }
+
+    .mode-btn i {
+      font-size: 13px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--accent-green);
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(1.3);
+      }
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      grid-area: sidebar;
+      background: var(--navy-950);
+      border-right: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform .35s cubic-bezier(.4, 0, .2, 1), opacity .25s ease;
+      z-index: 90;
+    }
+
+    /* ── SIDEBAR TOGGLE BUTTON ── */
+    .sidebar-toggle-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .sidebar-toggle-btn:hover {
+      background: rgba(59, 130, 246, .15);
+      border-color: rgba(59, 130, 246, .4);
+      color: var(--accent-blue);
+    }
+
+    .sidebar-toggle-btn i {
+      font-size: 15px;
+      transition: transform .3s ease;
+    }
+
+    #app.sidebar-collapsed .sidebar-toggle-btn i {
+      transform: rotate(180deg);
+    }
+
+    /* Sidebar tabs */
+    .sidebar-tabs {
+      display: flex;
+      background: var(--navy-900);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .s-tab {
+      flex: 1;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      font-size: 10px;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: var(--transition);
+      text-align: center;
+    }
+
+    .s-tab i {
+      font-size: 14px;
+    }
+
+    .s-tab:hover {
+      color: var(--text-secondary);
+      background: var(--glass-hover);
+    }
+
+    .s-tab.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+      background: var(--glass-bg);
+    }
+
+    /* Sidebar panels */
+    .sidebar-panel {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-panel.active {
+      display: flex;
+    }
+
+    .sidebar-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar-thumb {
+      background: var(--navy-700);
+      border-radius: 4px;
+    }
+
+    /* ── MAIN AREA ── */
+    #main {
+      grid-area: main;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── STATS ROW ── */
+    #stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--navy-950);
+      border-bottom: 1px solid var(--glass-border);
+      flex-shrink: 0;
+    }
+
+    .stat-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+      transition: var(--transition);
+      backdrop-filter: blur(20px);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--card-accent, var(--accent-blue));
+      opacity: .7;
+    }
+
+    .stat-card:hover {
+      background: var(--glass-hover);
+      border-color: rgba(255, 255, 255, .12);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-card .sc-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+      background: var(--icon-bg, rgba(59, 130, 246, .15));
+      color: var(--card-accent, var(--accent-blue));
+    }
+
+    .stat-card .sc-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 4px;
+    }
+
+    .stat-card .sc-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .stat-card .sc-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .stat-card .sc-trend {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    .trend-up {
+      background: rgba(34, 197, 94, .15);
+      color: var(--accent-green);
+    }
+
+    .trend-down {
+      background: rgba(239, 68, 68, .15);
+      color: var(--accent-red);
+    }
+
+    .trend-neu {
+      background: rgba(148, 163, 184, .1);
+      color: var(--text-muted);
+    }
+
+    /* ── MAP CONTAINER ── */
+    #map-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Leaflet overrides */
+    .leaflet-container {
+      background: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .leaflet-control-zoom {
+      border: none !important;
+    }
+
+    .leaflet-control-zoom a {
+      background: var(--navy-800) !important;
+      color: var(--text-primary) !important;
+      border: 1px solid var(--glass-border) !important;
+      border-radius: 6px !important;
+      margin-bottom: 3px !important;
+      transition: var(--transition) !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: var(--navy-700) !important;
+      color: var(--accent-blue) !important;
+    }
+
+    .leaflet-bar {
+      box-shadow: var(--shadow-md) !important;
+    }
+
+    /* Custom Popup */
+    .leaflet-popup-content-wrapper {
+      background: rgba(255, 255, 255, .98) !important;
+      border: 1px solid var(--glass-border) !important;
+      border-radius: var(--radius) !important;
+      box-shadow: var(--shadow-lg), 0 0 30px rgba(37, 99, 235, .1) !important;
+      backdrop-filter: blur(20px) !important;
+      color: var(--text-primary) !important;
+      padding: 0 !important;
+    }
+
+    .leaflet-popup-tip {
+      background: rgba(255, 255, 255, .98) !important;
+    }
+
+    .leaflet-popup-content {
+      margin: 0 !important;
+      width: auto !important;
+    }
+
+    /* ── BOTTOM PANEL ── */
+    #bottom-panel {
+      height: 220px;
+      flex-shrink: 0;
+      background: var(--navy-950);
+      border-top: 1px solid var(--glass-border);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+      transition: height .3s ease;
+    }
+
+    #bottom-panel.collapsed {
+      height: 38px;
+    }
+
+    .bp-section {
+      border-right: 1px solid var(--glass-border);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .bp-section:last-child {
+      border-right: none;
+    }
+
+    .bp-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bp-title i {
+      color: var(--accent-blue);
+      font-size: 12px;
+    }
+
+    .bp-chart {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+
+    .bp-badge {
+      margin-left: auto;
+      background: rgba(37, 99, 235, .1);
+      border: 1px solid rgba(37, 99, 235, .3);
+      color: var(--accent-blue);
+      border-radius: 20px;
+      padding: 2px 9px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: none;
+      white-space: nowrap;
+      transition: var(--transition);
+    }
+
+    /* ── MAP OVERLAY CONTROLS ── */
+    .map-control-panel {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mcp-card {
+      background: rgba(10, 15, 30, .88);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-md);
+      min-width: 150px;
+    }
+
+    .mcp-title {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.45);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 6px;
+      font-size: 11.5px;
+      color: rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+      border-radius: 4px;
+      transition: var(--transition);
+    }
+
+    .legend-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px currentColor;
+    }
+
+    /* Dot khusus no-data — hitam solid */
+    .legend-dot.no-data {
+      background: #000000 !important;
+      box-shadow: 0 0 4px rgba(0,0,0,0.6);
+      border: 1px solid rgba(0, 0, 0, 0.5);
+    }
+
+    .legend-count {
+      margin-left: auto;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      padding: 1px 6px;
+    }
+
+    /* ── MAP LAYER TOGGLE ── */
+    .layer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+    }
+
+    .layer-row label {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .toggle-sw {
+      position: relative;
+      width: 30px;
+      height: 16px;
+      background: var(--navy-700);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .toggle-sw.on {
+      background: var(--accent-blue);
+    }
+
+    .toggle-sw::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: var(--transition);
+    }
+
+    .toggle-sw.on::after {
+      left: 16px;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-wrap {
+      padding: 10px 14px 0;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      padding: 8px 12px 8px 34px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .1);
+      background: var(--glass-hover);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    /* ── WILAYAH LIST ── */
+    .wil-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+
+    .wil-item:hover {
+      background: var(--glass-hover);
+      border-color: var(--glass-border);
+    }
+
+    .wil-item.selected {
+      background: rgba(59, 130, 246, .1);
+      border-color: rgba(59, 130, 246, .3);
+    }
+
+    .wil-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .wil-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .wil-name {
+      font-size: 12.5px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wil-prov {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .wil-ipm {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--text-secondary);
+    }
+
+    /* ── CLUSTER CARDS ── */
+    .cluster-overview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .cluster-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      cursor: pointer;
+      transition: var(--transition);
+      border-left: 3px solid var(--c-color, var(--accent-blue));
+    }
+
+    .cluster-card:hover {
+      background: var(--glass-hover);
+      transform: translateY(-1px);
+    }
+
+    .cluster-card.active {
+      background: rgba(59, 130, 246, .08);
+      border-color: var(--c-color);
+    }
+
+    .cc-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .cc-count {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .cc-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .cc-bar {
+      height: 3px;
+      border-radius: 2px;
+      margin-top: 8px;
+      background: var(--c-color, var(--accent-blue));
+      opacity: .5;
+      transition: var(--transition);
+    }
+
+    .cluster-card:hover .cc-bar {
+      opacity: 1;
+    }
+
+    /* ── DETAIL PANEL ── */
+    .detail-panel {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .dp-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .dp-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .dp-prov {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .dp-cluster-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 10px;
+      border: 1px solid currentColor;
+    }
+
+    .dp-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .dp-metric {
+      background: var(--navy-900);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+    }
+
+    .dp-metric-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .dp-metric-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .dp-metric-trend {
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
+    .dp-chart-title {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .dp-chart {
+      height: 100px;
+    }
+
+    /* ── BOTTOM PANEL TOGGLE ── */
+    .bp-toggle {
+      position: absolute;
+      right: 14px;
+      top: 8px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      width: 22px;
+      height: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      transition: var(--transition);
+    }
+
+    .bp-toggle:hover {
+      color: var(--text-primary);
+      background: var(--glass-hover);
+    }
+
+    /* Year badge in chart header */
+    .bp-badge {
+      transition: all .3s ease;
+    }
+
+    .bp-section:hover {
+      background: var(--glass-hover);
+    }
+
+    .bp-section {
+      transition: background .2s ease;
+    }
+
+    /* Stat card value transition */
+    .sc-value,
+    .sc-trend {
+      transition: all .3s ease;
+    }
+
+    /* Wilayah list IPM value */
+    .wil-ipm {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      min-width: 36px;
+      text-align: right;
+      transition: color .25s;
+    }
+
+    .wil-item:hover .wil-ipm {
+      color: var(--accent-cyan);
+    }
+
+    /* Selected year visual indicator on trend chart */
+    .year-marker-label {
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-blue);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-hdr {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      padding: 0 0 6px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-hdr i {
+      color: var(--accent-blue);
+    }
+
+    /* ── POPUP ── */
+    .popup-inner {
+      padding: 14px 16px;
+      min-width: 220px;
+    }
+
+    .popup-name {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .popup-prov {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .popup-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      border: 1px solid currentColor;
+    }
+
+    .popup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .popup-metric {
+      background: rgba(0, 0, 0, .06);
+      border-radius: 6px;
+      padding: 8px;
+    }
+
+    .popup-metric-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .popup-metric-value {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .popup-metric-trend {
+      font-size: 10px;
+      margin-top: 1px;
+    }
+
+    .popup-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .popup-btn {
+      flex: 1;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      color: var(--text-secondary);
+      font-size: 11px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .popup-btn:hover {
+      background: rgba(59, 130, 246, .15);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    /* ── PROGRESS BARS ── */
+    .prog-wrap {
+      margin-bottom: 10px;
+    }
+
+    .prog-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .prog-track {
+      height: 5px;
+      background: var(--glass-bg);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .prog-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .8s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    /* Animate-in */
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .stat-card {
+      animation: fadeSlideIn .4s ease both;
+    }
+
+    .stat-card:nth-child(1) {
+      animation-delay: .05s;
+    }
+
+    .stat-card:nth-child(2) {
+      animation-delay: .1s;
+    }
+
+    .stat-card:nth-child(3) {
+      animation-delay: .15s;
+    }
+
+    .stat-card:nth-child(4) {
+      animation-delay: .2s;
+    }
+
+    .stat-card:nth-child(5) {
+      animation-delay: .25s;
+    }
+
+    /* Loading overlay */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--navy-900);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .loader-logo {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #fff;
+      box-shadow: var(--shadow-glow-blue);
+      animation: logoFloat 2s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    .loader-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .loader-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .loader-bar {
+      width: 220px;
+      height: 3px;
+      background: var(--glass-bg);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .loader-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+      animation: loadAnim 2s ease-in-out forwards;
+    }
+
+    @keyframes loadAnim {
+      0% {
+        width: 0;
+      }
+
+      50% {
+        width: 70%;
+      }
+
+      100% {
+        width: 100%;
+      }
+    }
+
+    /* map search attribution */
+    .leaflet-control-attribution {
+      display: none !important;
+    }
+
+    /* scrollbar general */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--navy-700) transparent;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      :root {
+        --sidebar-w: 280px;
+      }
+
+      #stats-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .stat-card:nth-child(4),
+      .stat-card:nth-child(5) {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #app {
+        grid-template-areas: "header" "main";
+        grid-template-columns: 1fr;
+        grid-template-rows: var(--header-h) 1fr;
+      }
+
+      #sidebar {
+        position: fixed;
+        left: 0;
+        top: var(--header-h);
+        bottom: 0;
+        transform: translateX(-100%);
+        width: 300px;
+        z-index: 800;
+      }
+
+      #sidebar.open {
+        transform: translateX(0);
+      }
+
+      #stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      #bottom-panel {
+        display: none;
+      }
+    }
+
+    /* Top bar pill indicator */
+    .data-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .data-indicator span {
+      color: var(--accent-cyan);
+      font-weight: 600;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Tooltip */
+    .custom-tooltip {
+      background: rgba(255, 255, 255, .98) !important;
+      border: 1px solid var(--glass-border) !important;
+      border-radius: 6px !important;
+      padding: 4px 8px !important;
+      font-size: 11px !important;
+      font-weight: 500 !important;
+      color: var(--text-primary) !important;
+      box-shadow: var(--shadow-md) !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOADING -->
+  <div id="loader">
+    <div class="loader-logo"><i class="fas fa-globe-asia"></i></div>
+    <div>
+      <div class="loader-title">Dashboard Spasio-Temporal</div>
+      <div class="loader-sub">IPM & Kemiskinan Kabupaten/Kota Indonesia</div>
+    </div>
+    <div class="loader-bar">
+      <div class="loader-fill"></div>
+    </div>
+    <div class="loader-sub" id="loader-msg">Memuat GeoJSON 514 wilayah...</div>
+  </div>
+
+  <div id="app">
+
+    <!-- ═══════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════ -->
+    <header id="header">
+      <button class="sidebar-toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+        <i class="fas fa-bars" id="sidebar-toggle-icon"></i>
+      </button>
+      <div class="header-logo">
+        <div class="header-logo-icon"><i class="fas fa-globe-asia"></i></div>
+        <div>
+          <div class="header-title">GeoAnalytics Indonesia</div>
+          <div class="header-subtitle">Sistem Pemantauan IPM & Kemiskinan</div>
+        </div>
+      </div>
+
+      <div class="header-divider"></div>
+      <div class="header-meta">
+        <div class="header-badge"><i class="fas fa-map-marked-alt" style="margin-right:4px"></i>514 Kab/Kota</div>
+        <div class="data-indicator"><i class="fas fa-database" style="font-size:10px"></i> <span
+            id="h-wilayah">488</span> wilayah termuat</div>
+      </div>
+
+      <div class="header-spacer"></div>
+
+      <div class="header-controls">
+        <div class="live-badge">
+          <div class="live-dot"></div><span id="live-year-label">Live Data 2024</span>
+        </div>
+        <div class="header-divider"></div>
+
+        <div class="year-control">
+          <label><i class="fas fa-calendar-alt"></i> Tahun</label>
+          <select class="year-select" id="year-select"></select>
+          <div style="display:flex;gap:3px">
+            <button class="year-nav-btn" id="btn-year-prev" onclick="navYear(-1)" title="Tahun sebelumnya"
+              style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:10px;padding:0 2px;transition:color .2s">◀</button>
+            <button class="year-nav-btn" id="btn-year-next" onclick="navYear(1)" title="Tahun berikutnya"
+              style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:10px;padding:0 2px;transition:color .2s">▶</button>
+          </div>
+        </div>
+
+        <button class="mode-btn active" id="btn-ipm" onclick="setMode('ipm',this)">
+          <i class="fas fa-chart-line"></i> IPM
+        </button>
+        <button class="mode-btn" id="btn-kemiskinan" onclick="setMode('kemiskinan',this)">
+          <i class="fas fa-hand-holding-heart"></i> Kemiskinan
+        </button>
+        <button class="mode-btn" id="btn-cluster" onclick="setMode('cluster',this)">
+          <i class="fas fa-layer-group"></i> Klaster
+        </button>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════ -->
+    <aside id="sidebar">
+      <!-- Tabs -->
+      <div class="sidebar-tabs">
+        <div class="s-tab active" onclick="switchTab('wilayah',this)" title="Daftar Wilayah">
+          <i class="fas fa-list"></i>Wilayah
+        </div>
+        <div class="s-tab" onclick="switchTab('cluster',this)" title="Analisis Klaster">
+          <i class="fas fa-layer-group"></i>Klaster
+        </div>
+        <div class="s-tab" onclick="switchTab('detail',this)" title="Detail Wilayah">
+          <i class="fas fa-info-circle"></i>Detail
+        </div>
+        <div class="s-tab" onclick="switchTab('filter',this)" title="Filter & Layer">
+          <i class="fas fa-filter"></i>Filter
+        </div>
+      </div>
+
+      <!-- Panel: Wilayah List -->
+      <div class="sidebar-panel active" id="panel-wilayah">
+        <div class="search-wrap">
+          <i class="fas fa-search search-icon" style="top:18px"></i>
+          <input class="search-input" id="search-wil" placeholder="Cari kabupaten/kota..."
+            oninput="filterWilayah(this.value)">
+        </div>
+        <div class="sidebar-scroll" id="wil-list"></div>
+      </div>
+
+      <!-- Panel: Cluster -->
+      <div class="sidebar-panel" id="panel-cluster">
+        <div class="sidebar-scroll">
+          <div class="section-hdr"><i class="fas fa-layer-group"></i>Distribusi Klaster K-Means (k=4)</div>
+          <div class="cluster-overview" id="cluster-overview"></div>
+          <div class="section-hdr" style="margin-top:8px"><i class="fas fa-info-circle"></i>Interpretasi Klaster</div>
+          <div id="cluster-desc"></div>
+          <div class="section-hdr" style="margin-top:10px"><i class="fas fa-chart-bar"></i>Sebaran IPM per Klaster</div>
+          <canvas id="chart-cluster-bar" height="140"></canvas>
+        </div>
+      </div>
+
+      <!-- Panel: Detail -->
+      <div class="sidebar-panel" id="panel-detail">
+        <div class="sidebar-scroll" id="detail-content">
+          <div style="text-align:center;padding:40px 20px;color:var(--text-muted)">
+            <i class="fas fa-mouse-pointer"
+              style="font-size:32px;margin-bottom:12px;display:block;color:var(--navy-700)"></i>
+            Klik wilayah pada peta untuk melihat detail
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel: Filter -->
+      <div class="sidebar-panel" id="panel-filter">
+        <div class="sidebar-scroll">
+          <div class="section-hdr"><i class="fas fa-sliders-h"></i>Rentang IPM</div>
+          <div style="padding:4px 0 12px">
+            <div
+              style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:6px">
+              <span>Min: <b id="ipm-min-val">0</b></span>
+              <span>Max: <b id="ipm-max-val">100</b></span>
+            </div>
+            <input type="range" id="ipm-min" min="0" max="100" value="0"
+              style="width:100%;accent-color:var(--accent-blue)" oninput="applyFilters()">
+            <input type="range" id="ipm-max" min="0" max="100" value="100"
+              style="width:100%;accent-color:var(--accent-blue)" oninput="applyFilters()">
+          </div>
+
+          <div class="section-hdr"><i class="fas fa-sliders-h"></i>Rentang Kemiskinan (%)</div>
+          <div style="padding:4px 0 12px">
+            <div
+              style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:6px">
+              <span>Min: <b id="pov-min-val">0</b></span>
+              <span>Max: <b id="pov-max-val">50</b></span>
+            </div>
+            <input type="range" id="pov-min" min="0" max="50" value="0"
+              style="width:100%;accent-color:var(--accent-amber)" oninput="applyFilters()">
+            <input type="range" id="pov-max" min="0" max="50" value="50"
+              style="width:100%;accent-color:var(--accent-amber)" oninput="applyFilters()">
+          </div>
+
+          <div class="section-hdr"><i class="fas fa-filter"></i>Filter Klaster</div>
+          <div id="cluster-filter-list" style="margin-bottom:12px"></div>
+
+          <div class="section-hdr"><i class="fas fa-map"></i>Layer Peta</div>
+          <div class="layer-row">
+            <label for="lyr-labels">Label Nama</label>
+            <div class="toggle-sw on" id="lyr-labels" onclick="toggleLayer('labels',this)"></div>
+          </div>
+          <div class="layer-row" style="margin-top:6px">
+            <label for="lyr-heatmap">Heatmap Overlay</label>
+            <div class="toggle-sw" id="lyr-heatmap" onclick="toggleLayer('heatmap',this)"></div>
+          </div>
+
+          <div style="margin-top:14px">
+            <button onclick="resetFilters()"
+              style="width:100%;padding:8px;border-radius:8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:var(--accent-blue);cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;transition:var(--transition)">
+              <i class="fas fa-undo"></i> Reset Filter
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══════════════════════════════════════════
+       MAIN
+  ════════════════════════════════════════════ -->
+    <main id="main">
+
+      <!-- Stats Row -->
+      <div id="stats-row">
+        <div class="stat-card" style="--card-accent:#06b6d4;--icon-bg:rgba(6,182,212,.15)">
+          <div class="sc-icon"><i class="fas fa-map-marked-alt"></i></div>
+          <div class="sc-label">Total Wilayah</div>
+          <div class="sc-value" id="s-total">488</div>
+          <div class="sc-sub">514 Kabupaten/Kota Indonesia</div>
+        </div>
+        <div class="stat-card" style="--card-accent:#3b82f6;--icon-bg:rgba(59,130,246,.15)">
+          <div class="sc-icon"><i class="fas fa-chart-line"></i></div>
+          <div class="sc-label" id="s-ipm-label">IPM Nasional 2024</div>
+          <div class="sc-value" id="s-ipm">71.28</div>
+          <div class="sc-sub">Rata-rata Indeks Pembangunan Manusia</div>
+          <div class="sc-trend trend-up" id="s-ipm-trend">▲ +2.1</div>
+        </div>
+        <div class="stat-card" style="--card-accent:#f59e0b;--icon-bg:rgba(245,158,11,.15)">
+          <div class="sc-icon"><i class="fas fa-hand-holding-heart"></i></div>
+          <div class="sc-label" id="s-pov-label">Kemiskinan Nasional 2024</div>
+          <div class="sc-value" id="s-pov">11.97<span style="font-size:14px">%</span></div>
+          <div class="sc-sub">Rata-rata persentase penduduk miskin</div>
+          <div class="sc-trend trend-down" id="s-pov-trend">▼ -0.8</div>
+        </div>
+        <div class="stat-card" style="--card-accent:#22c55e;--icon-bg:rgba(34,197,94,.15)">
+          <div class="sc-icon"><i class="fas fa-trophy"></i></div>
+          <div class="sc-label">IPM Tertinggi</div>
+          <div class="sc-value" id="s-ipm-top" style="font-size:16px">88.77</div>
+          <div class="sc-sub" id="s-ipm-top-name">Yogyakarta</div>
+        </div>
+        <div class="stat-card" style="--card-accent:#ef4444;--icon-bg:rgba(239,68,68,.15)">
+          <div class="sc-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="sc-label">Kemiskinan Tertinggi</div>
+          <div class="sc-value" id="s-pov-top" style="font-size:16px">41.42<span style="font-size:12px">%</span></div>
+          <div class="sc-sub" id="s-pov-top-name">Intan Jaya</div>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div id="map-wrap">
+        <div id="map"></div>
+
+        <!-- Map overlay controls -->
+        <div class="map-control-panel">
+          <!-- Legend -->
+          <div class="mcp-card" id="map-legend">
+            <div class="mcp-title"><i class="fas fa-palette" style="margin-right:4px"></i>LEGENDA</div>
+            <div id="legend-items"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Charts -->
+      <div id="bottom-panel" style="position:relative">
+        <button class="bp-toggle" id="bp-btn" onclick="toggleBottomPanel()" title="Toggle Panel">
+          <i class="fas fa-chevron-down" id="bp-icon"></i>
+        </button>
+
+        <div class="bp-section">
+          <div class="bp-title"><i class="fas fa-chart-area"></i>Tren IPM Nasional (2015–2024)<span class="bp-badge"
+              id="trend-year-badge">2024</span></div>
+          <div class="bp-chart"><canvas id="chart-trend"></canvas></div>
+        </div>
+        <div class="bp-section">
+          <div class="bp-title"><i class="fas fa-chart-scatter"></i>IPM vs Kemiskinan (Scatter)<span class="bp-badge"
+              id="scatter-year-badge">2024</span></div>
+          <div class="bp-chart"><canvas id="chart-scatter"></canvas></div>
+        </div>
+        <div class="bp-section">
+          <div class="bp-title"><i class="fas fa-chart-bar"></i>Distribusi IPM per Provinsi (Top 10)<span
+              class="bp-badge" id="prov-year-badge">2024</span></div>
+          <div class="bp-chart"><canvas id="chart-prov"></canvas></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+  <script>
+    // ============================================================
+    // EMBEDDED DATA (generated by Python)
+    // ============================================================
+    const STATS = { "total_wilayah": 488, "ipm_nasional": 71.28, "kemiskinan_nasional": 11.97, "ipm_tertinggi": { "nama": "YOGYAKARTA", "nilai": 88.77 }, "ipm_terendah": { "nama": "NDUGA", "nilai": 36.3 }, "kemiskinan_tertinggi": { "nama": "INTAN JAYA", "nilai": 41.42 }, "cluster_counts": { "Klaster 1": 228, "Klaster 3": 204, "Klaster 4": 41, "Klaster 2": 15 }, "years": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024] };
+
+    const CLUSTER_COLORS = {
+      'Klaster 1': '#16a34a',
+      'Klaster 2': '#2563eb',
+      'Klaster 3': '#d97706',
+      'Klaster 4': '#dc2626',
+      'No Data': '#000000'
+    };
+
+    const CLUSTER_DESC = {
+      'Klaster 1': { label: 'IPM Tinggi, Kemiskinan Rendah', sub: 'Wilayah maju dengan pembangunan manusia optimal', icon: 'fas fa-star' },
+      'Klaster 2': { label: 'IPM Menengah Atas, Kemiskinan Sedang', sub: 'Wilayah berkembang dengan potensi tinggi', icon: 'fas fa-arrow-trend-up' },
+      'Klaster 3': { label: 'IPM Menengah, Kemiskinan Cukup Tinggi', sub: 'Perlu peningkatan layanan dasar', icon: 'fas fa-exclamation-circle' },
+      'Klaster 4': { label: 'IPM Rendah, Kemiskinan Tinggi', sub: 'Wilayah prioritas intervensi pemerintah', icon: 'fas fa-hand-holding-heart' },
+    };
+
+    // ============================================================
+    // STATE
+    // ============================================================
+    let map, geoLayer, geojsonData, timeseriesData, clusterData;
+    let currentMode = 'ipm';
+    let currentYear = 2024;
+    let selectedName = null;
+    let activeFilters = { clusters: new Set(['Klaster 1', 'Klaster 2', 'Klaster 3', 'Klaster 4', 'No Data']), ipmMin: 0, ipmMax: 100, povMin: 0, povMax: 50 };
+    let charts = {};
+    let bottomCollapsed = false;
+
+    // ============================================================
+    // DATA HELPERS
+    // Beberapa wilayah pada timeseries.json memiliki baris tahun
+    // terduplikasi (hasil merge sumber data) dengan nilai "-" yang
+    // bercampur dengan angka. Helper berikut memastikan setiap
+    // agregasi (tren nasional, scatter, distribusi provinsi) selalu
+    // mengambil nilai numerik yang valid untuk tahun yang diminta,
+    // sehingga hasil perhitungan akurat & konsisten antar chart.
+    // ============================================================
+    function parseNum(v) {
+      if (v === null || v === undefined || v === '-' || v === '') return null;
+      const n = typeof v === 'number' ? v : parseFloat(v);
+      return isNaN(n) ? null : n;
+    }
+
+    function getValueForYear(ts, year, field) {
+      if (!ts || !ts.years) return null;
+      for (let i = 0; i < ts.years.length; i++) {
+        if (ts.years[i] === year) {
+          const v = parseNum(ts[field][i]);
+          if (v != null) return v;
+        }
+      }
+      return null;
+    }
+
+    function getLatestValue(ts, field) {
+      if (!ts || !ts.years) return null;
+      for (let i = ts.years.length - 1; i >= 0; i--) {
+        const v = parseNum(ts[field][i]);
+        if (v != null) return v;
+      }
+      return null;
+    }
+
+    let _provinceMap = null;
+    function getProvinceMap() {
+      if (_provinceMap) return _provinceMap;
+      _provinceMap = {};
+      if (geojsonData) {
+        geojsonData.features.forEach(f => {
+          const p = f.properties;
+          if (p.name_clean) _provinceMap[p.name_clean] = p.prov_name;
+        });
+      }
+      return _provinceMap;
+    }
+
+    let _nationalYearlyCache = null;
+    function computeNationalYearly() {
+      if (_nationalYearlyCache) return _nationalYearlyCache;
+      const years = STATS.years;
+      const ipmSum = {}, povSum = {}, ipmCnt = {}, povCnt = {};
+      years.forEach(y => { ipmSum[y] = 0; povSum[y] = 0; ipmCnt[y] = 0; povCnt[y] = 0; });
+      if (timeseriesData) {
+        Object.values(timeseriesData).forEach(ts => {
+          years.forEach(y => {
+            const iv = getValueForYear(ts, y, 'ipm');
+            const pv = getValueForYear(ts, y, 'kemiskinan');
+            if (iv != null) { ipmSum[y] += iv; ipmCnt[y]++; }
+            if (pv != null) { povSum[y] += pv; povCnt[y]++; }
+          });
+        });
+      }
+      _nationalYearlyCache = {
+        years,
+        ipmAvg: years.map(y => ipmCnt[y] ? +(ipmSum[y] / ipmCnt[y]).toFixed(2) : null),
+        povAvg: years.map(y => povCnt[y] ? +(povSum[y] / povCnt[y]).toFixed(2) : null),
+        ipmCnt, povCnt
+      };
+      return _nationalYearlyCache;
+    }
+
+    function getScatterDataForYear(year) {
+      const points = [];
+      if (!timeseriesData) return points;
+      Object.entries(timeseriesData).forEach(([key, ts]) => {
+        const ipm = getValueForYear(ts, year, 'ipm');
+        const pov = getValueForYear(ts, year, 'kemiskinan');
+        if (ipm == null || pov == null) return;
+        points.push({ key, name: ts.wilayah || key, x: ipm, y: pov, cluster: ts.cluster || 'No Data' });
+      });
+      return points;
+    }
+
+    function getProvinceTop10ForYear(year) {
+      const provMap = getProvinceMap();
+      const acc = {};
+      if (timeseriesData) {
+        Object.entries(timeseriesData).forEach(([key, ts]) => {
+          const prov = provMap[key];
+          if (!prov) return;
+          const ipm = getValueForYear(ts, year, 'ipm');
+          if (ipm == null) return;
+          if (!acc[prov]) acc[prov] = { sum: 0, cnt: 0 };
+          acc[prov].sum += ipm; acc[prov].cnt++;
+        });
+      }
+      return Object.entries(acc)
+        .map(([name, v]) => ({ name, avg: v.sum / v.cnt, cnt: v.cnt }))
+        .sort((a, b) => b.avg - a.avg)
+        .slice(0, 10);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', async () => {
+      setLoaderMsg('Memuat Leaflet map...');
+      initMap();
+      initYearSelect();
+
+      setLoaderMsg('Memuat data timeseries (488 wilayah)...');
+      await loadTimeseries();
+
+      setLoaderMsg('Memuat GeoJSON Indonesia...');
+      await loadGeoJSON();
+
+      setLoaderMsg('Memuat data klaster K-Means...');
+      await loadClusterData();
+
+      setLoaderMsg('Membangun antarmuka...');
+      buildStats();
+      buildWilayahList();
+      buildClusterPanel();
+      buildClusterFilterList();
+      buildLegend();
+      initCharts();
+
+      setTimeout(() => {
+        document.getElementById('loader').style.opacity = '0';
+        document.getElementById('loader').style.transition = 'opacity .4s';
+        setTimeout(() => document.getElementById('loader').style.display = 'none', 400);
+      }, 600);
+    });
+
+    function setLoaderMsg(msg) { document.getElementById('loader-msg').textContent = msg; }
+
+    // ============================================================
+    // MAP
+    // ============================================================
+    function initMap() {
+      map = L.map('map', {
+        center: [-2.5, 118],
+        zoom: 5,
+        minZoom: 4, maxZoom: 13,
+        zoomControl: true,
+        attributionControl: false,
+      });
+
+      // Light tile layer
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19, subdomains: 'abcd'
+      }).addTo(map);
+
+      // Label layer (city names)
+      window.labelLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19, subdomains: 'abcd', opacity: 0.8
+      }).addTo(map);
+    }
+
+    async function loadGeoJSON() {
+      try {
+        const resp = await fetch('data/geo_simplified.geojson');
+        geojsonData = await resp.json();
+        renderGeoLayer();
+      } catch (e) {
+        console.error('GeoJSON load failed:', e);
+      }
+    }
+
+    async function loadTimeseries() {
+      try {
+        const resp = await fetch('data/timeseries.json');
+        timeseriesData = await resp.json();
+      } catch (e) {
+        console.error('Timeseries load failed:', e);
+        timeseriesData = {};
+      }
+    }
+
+    async function loadClusterData() {
+      try {
+        const resp = await fetch('data/cluster_data.json');
+        clusterData = await resp.json();
+      } catch (e) {
+        console.error('Cluster data load failed:', e);
+        clusterData = [];
+      }
+    }
+
+    // ============================================================
+    // GEO LAYER RENDERING
+    // ============================================================
+    function renderGeoLayer() {
+      if (geoLayer) map.removeLayer(geoLayer);
+
+      geoLayer = L.geoJSON(geojsonData, {
+        style: styleFeature,
+        onEachFeature: onEachFeature,
+        filter: filterFeature,
+      }).addTo(map);
+    }
+
+    function getColorIPM(val) {
+      const v = (val == null || val === '-' || val === '') ? null : parseFloat(val);
+      if (v == null || isNaN(v)) return '#000000';
+      if (v >= 80) return '#16a34a';
+      if (v >= 75) return '#84cc16';
+      if (v >= 70) return '#2563eb';
+      if (v >= 65) return '#0891b2';
+      if (v >= 60) return '#d97706';
+      if (v >= 55) return '#fb923c';
+      return '#dc2626';
+    }
+
+    function getColorPov(val) {
+      const v = (val == null || val === '-' || val === '') ? null : parseFloat(val);
+      if (v == null || isNaN(v)) return '#000000';
+      if (v <= 5) return '#16a34a';
+      if (v <= 10) return '#84cc16';
+      if (v <= 15) return '#d97706';
+      if (v <= 20) return '#fb923c';
+      if (v <= 30) return '#dc2626';
+      return '#991b1b';
+    }
+
+    function getFeatureValue(props) {
+      const name = props.name_clean;
+      const field = currentMode === 'kemiskinan' ? 'kemiskinan' : 'ipm';
+      if (!timeseriesData || !timeseriesData[name]) {
+        // Jika props statis bernilai '-' atau null → return null (tampil abu-abu)
+        const raw = currentMode === 'ipm' ? props.ipm_mean : props.kemiskinan_mean;
+        return parseNum(raw);
+      }
+      const ts = timeseriesData[name];
+      // Tidak ada fallback ke tahun lain — null berarti tidak ada data tahun ini
+      return getValueForYear(ts, currentYear, field);
+    }
+
+    function styleFeature(feature) {
+      const p = feature.properties;
+      let fillColor;
+      let isNoData = false;
+      if (currentMode === 'cluster') {
+        const cl = p.cluster_label || 'No Data';
+        fillColor = CLUSTER_COLORS[cl] || CLUSTER_COLORS['No Data'];
+        isNoData = cl === 'No Data';
+      } else {
+        const val = getFeatureValue(p);
+        isNoData = (val == null);
+        fillColor = currentMode === 'ipm' ? getColorIPM(val) : getColorPov(val);
+      }
+      const isSelected = p.name_clean === selectedName;
+      return {
+        fillColor,
+        fillOpacity: isNoData ? 0.88 : (isSelected ? 0.9 : 0.72),
+        color: isSelected ? '#fff' : (isNoData ? '#000000' : 'rgba(255,255,255,0.08)'),
+        weight: isSelected ? 2 : (isNoData ? 0.8 : 0.5),
+        dashArray: null,
+      };
+    }
+
+    function filterFeature(feature) {
+      const p = feature.properties;
+      const cl = p.cluster_label || 'No Data';
+      if (!activeFilters.clusters.has(cl)) return false;
+      // Gunakan nilai per tahun aktif (bukan ipm_mean yang statis)
+      const ts = timeseriesData?.[p.name_clean];
+      const ipm = ts ? (getValueForYear(ts, currentYear, 'ipm') ?? parseNum(p.ipm_mean)) : parseNum(p.ipm_mean);
+      const pov = ts ? (getValueForYear(ts, currentYear, 'kemiskinan') ?? parseNum(p.kemiskinan_mean)) : parseNum(p.kemiskinan_mean);
+      if (ipm != null && (ipm < activeFilters.ipmMin || ipm > activeFilters.ipmMax)) return false;
+      if (pov != null && (pov < activeFilters.povMin || pov > activeFilters.povMax)) return false;
+      return true;
+    }
+
+    function onEachFeature(feature, layer) {
+      const p = feature.properties;
+      layer.on({
+        mouseover(e) {
+          const l = e.target;
+          l.setStyle({ fillOpacity: 0.95, weight: 1.5, color: 'rgba(255,255,255,0.4)' });
+          l.bringToFront();
+          showTooltip(l, p);
+        },
+        mouseout(e) {
+          geoLayer.resetStyle(e.target);
+          if (selectedName === p.name_clean) {
+            e.target.setStyle({ fillOpacity: 0.9, color: '#fff', weight: 2 });
+          }
+        },
+        click(e) {
+          selectWilayah(p.name_clean, p);
+          L.DomEvent.stopPropagation(e);
+        }
+      });
+
+      layer.bindTooltip(`<b>${p.wilayah || p.name_clean}</b>`, {
+        permanent: false, direction: 'top', className: 'custom-tooltip'
+      });
+    }
+
+    function showTooltip(layer, p) { /* handled by Leaflet tooltip */ }
+
+    // ============================================================
+    // SELECTION & DETAIL
+    // ============================================================
+    function selectWilayah(name, props) {
+      selectedName = name;
+      renderGeoLayer();
+
+      // Zoom to feature
+      if (geoLayer) {
+        geoLayer.eachLayer(l => {
+          if (l.feature && l.feature.properties.name_clean === name) {
+            map.fitBounds(l.getBounds(), { padding: [40, 40], maxZoom: 9 });
+            showPopup(l, props);
+          }
+        });
+      }
+
+      // Update detail panel & switch to it
+      updateDetailPanel(name, props);
+      switchTab('detail', document.querySelectorAll('.s-tab')[2]);
+
+      // Highlight list item
+      document.querySelectorAll('.wil-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.name === name);
+      });
+    }
+
+    function showPopup(layer, p) {
+      const name = p.name_clean;
+      const isNoData = (currentMode === 'cluster') ? (p.cluster_label === 'No Data') : (getFeatureValue(p) == null);
+
+      if (isNoData) {
+        const html = `
+      <div class="popup-inner">
+        <div class="popup-name">${p.wilayah || p.name_clean}</div>
+        <div class="popup-prov"><i class="fas fa-map-marker-alt" style="font-size:9px;margin-right:4px"></i>${p.prov_name || ''}</div>
+        <div style="margin-top:10px;padding:12px;background:rgba(0,0,0,0.05);border-radius:6px;text-align:center;color:var(--text-muted);font-weight:600;font-size:12px;">
+          <i class="fas fa-exclamation-circle" style="color:#dc2626;margin-right:6px"></i>Data tidak tersedia
+        </div>
+      </div>`;
+        layer.bindPopup(html, { maxWidth: 300, className: 'light-popup' }).openPopup();
+        return;
+      }
+
+      const ts = timeseriesData && timeseriesData[name];
+      // Ambil nilai per tahun aktif
+      const val_ipm = ts ? getValueForYear(ts, currentYear, 'ipm') ?? getLatestValue(ts, 'ipm') : (parseNum(p.ipm_latest) ?? parseNum(p.ipm_mean));
+      const val_pov = ts ? getValueForYear(ts, currentYear, 'kemiskinan') ?? getLatestValue(ts, 'kemiskinan') : (parseNum(p.kemiskinan_latest) ?? parseNum(p.kemiskinan_mean));
+      // Tren keseluruhan 2015→tahun aktif dari timeseries
+      let ipmTrend = '', povTrend = '';
+      if (ts) {
+        const baseIpm = getValueForYear(ts, STATS.years[0], 'ipm') ?? getValueForYear(ts, ts.years[0], 'ipm');
+        const basePov = getValueForYear(ts, STATS.years[0], 'kemiskinan') ?? getValueForYear(ts, ts.years[0], 'kemiskinan');
+        if (baseIpm != null && val_ipm != null) {
+          const diff = +(val_ipm - baseIpm).toFixed(2);
+          ipmTrend = diff >= 0
+            ? `<span style="color:#16a34a;font-size:10px">▲ +${diff} (${STATS.years[0]}→${currentYear})</span>`
+            : `<span style="color:#dc2626;font-size:10px">▼ ${diff} (${STATS.years[0]}→${currentYear})</span>`;
+        }
+        if (basePov != null && val_pov != null) {
+          const diff = +(val_pov - basePov).toFixed(2);
+          povTrend = diff <= 0
+            ? `<span style="color:#16a34a;font-size:10px">▼ ${diff}% (${STATS.years[0]}→${currentYear})</span>`
+            : `<span style="color:#dc2626;font-size:10px">▲ +${diff}% (${STATS.years[0]}→${currentYear})</span>`;
+        }
+      }
+      const clColor = CLUSTER_COLORS[p.cluster_label] || '#9ca3af';
+      const clLabel = p.cluster_label || 'No Data';
+      const disp_ipm = val_ipm != null ? `<span style="color:#2563eb">${val_ipm.toFixed(2)}</span>` : `<span style="font-size:11px;color:#94a3b8">Tidak tersedia</span>`;
+      const disp_pov = val_pov != null ? `<span style="color:#d97706">${val_pov.toFixed(2)}%</span>` : `<span style="font-size:11px;color:#94a3b8">Tidak tersedia</span>`;
+
+      const html = `
+    <div class="popup-inner">
+      <div class="popup-name">${p.wilayah || p.name_clean}</div>
+      <div class="popup-prov"><i class="fas fa-map-marker-alt" style="font-size:9px;margin-right:4px"></i>${p.prov_name || ''}</div>
+      <div class="popup-badge" style="color:${clColor};border-color:${clColor}">${clLabel}</div>
+      <div class="popup-grid">
+        <div class="popup-metric">
+          <div class="popup-metric-label">IPM ${currentYear}</div>
+          <div class="popup-metric-value">${disp_ipm}</div>
+          <div class="popup-metric-trend">${ipmTrend}</div>
+        </div>
+        <div class="popup-metric">
+          <div class="popup-metric-label">Kemiskinan ${currentYear}</div>
+          <div class="popup-metric-value">${disp_pov}</div>
+          <div class="popup-metric-trend">${povTrend}</div>
+        </div>
+      </div>
+      <div class="popup-actions">
+        <button class="popup-btn" onclick="switchTab('detail',document.querySelectorAll('.s-tab')[2])"><i class="fas fa-chart-line"></i> Lihat Tren</button>
+      </div>
+    </div>`;
+      layer.bindPopup(html, { maxWidth: 300, className: 'light-popup' }).openPopup();
+    }
+
+    function updateDetailPanel(name, props) {
+      const ts = timeseriesData && timeseriesData[name];
+      const clColor = CLUSTER_COLORS[props.cluster_label] || '#9ca3af';
+
+      // Nilai per tahun aktif
+      const ipmVal = ts ? (getValueForYear(ts, currentYear, 'ipm') ?? getLatestValue(ts, 'ipm')) : parseNum(props.ipm_latest);
+      const povVal = ts ? (getValueForYear(ts, currentYear, 'kemiskinan') ?? getLatestValue(ts, 'kemiskinan')) : parseNum(props.kemiskinan_latest);
+
+      // Tren dari tahun pertama → tahun aktif
+      let ipmTrendHtml = '', povTrendHtml = '';
+      if (ts) {
+        const base = STATS.years[0];
+        const baseIpm = getValueForYear(ts, base, 'ipm');
+        const basePov = getValueForYear(ts, base, 'kemiskinan');
+        if (baseIpm != null && ipmVal != null) {
+          const d = +(ipmVal - baseIpm).toFixed(2);
+          ipmTrendHtml = d >= 0
+            ? `<span style="color:#16a34a">▲ +${d} (${base}→${currentYear})</span>`
+            : `<span style="color:#dc2626">▼ ${d} (${base}→${currentYear})</span>`;
+        }
+        if (basePov != null && povVal != null) {
+          const d = +(povVal - basePov).toFixed(2);
+          povTrendHtml = d <= 0
+            ? `<span style="color:#16a34a">▼ ${d}% (${base}→${currentYear})</span>`
+            : `<span style="color:#dc2626">▲ +${d}% (${base}→${currentYear})</span>`;
+        }
+      }
+
+      const disp_ipm = ipmVal != null
+        ? `<span style="color:#2563eb">${ipmVal.toFixed(2)}</span>`
+        : `<span style="font-size:11px;font-weight:normal;color:#94a3b8">Data tidak tersedia</span>`;
+      const disp_pov = povVal != null
+        ? `<span style="color:#d97706">${povVal.toFixed(2)}%</span>`
+        : `<span style="font-size:11px;font-weight:normal;color:#94a3b8">Data tidak tersedia</span>`;
+
+      const ipmProg = ipmVal != null ? Math.min(100, (ipmVal / 100) * 100) : 0;
+      const povProg = povVal != null ? Math.min(100, (povVal / 50) * 100) : 0;
+
+      document.getElementById('detail-content').innerHTML = `
+    <div class="detail-panel">
+      <div class="dp-header">
+        <div>
+          <div class="dp-name">${props.wilayah || name}</div>
+          <div class="dp-prov">${props.prov_name || ''}</div>
+        </div>
+        <div class="dp-cluster-badge" style="color:${clColor};border-color:${clColor}">${props.cluster_label || 'No Data'}</div>
+      </div>
+      <div class="dp-metrics">
+        <div class="dp-metric">
+          <div class="dp-metric-label">IPM ${currentYear}</div>
+          <div class="dp-metric-value">${disp_ipm}</div>
+          <div class="dp-metric-trend">${ipmTrendHtml}</div>
+        </div>
+        <div class="dp-metric">
+          <div class="dp-metric-label">Kemiskinan ${currentYear}</div>
+          <div class="dp-metric-value">${disp_pov}</div>
+          <div class="dp-metric-trend">${povTrendHtml}</div>
+        </div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>IPM (skala 0–100)</span><span>${ipmVal != null ? ipmVal.toFixed(2) : "–"}</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:${ipmProg}%;background:#2563eb"></div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-label"><span>Kemiskinan (skala 0–50%)</span><span>${povVal != null ? povVal.toFixed(2) + "%" : "–"}</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:${povProg}%;background:#d97706"></div></div>
+      </div>
+    </div>
+    <div class="section-hdr"><i class="fas fa-chart-line"></i>Tren IPM & Kemiskinan</div>
+    <canvas id="detail-chart" height="140" style="margin-bottom:10px"></canvas>
+    <div class="section-hdr" style="margin-top:4px"><i class="fas fa-info-circle"></i>Informasi Klaster</div>
+    <div class="detail-panel" style="margin-top:6px">
+      <div style="font-size:11px;color:var(--text-secondary)">${CLUSTER_DESC[props.cluster_label]?.label || '—'}</div>
+      <div style="font-size:10.5px;color:var(--text-muted);margin-top:4px">${CLUSTER_DESC[props.cluster_label]?.sub || ''}</div>
+    </div>
+  `;
+
+      // Build detail chart (tren per wilayah, deduplicate)
+      if (ts) {
+        const ctx = document.getElementById('detail-chart')?.getContext('2d');
+        if (ctx) {
+          const dYears = STATS.years.filter(y => ts.years.includes(y));
+          const dIpm = dYears.map(y => getValueForYear(ts, y, 'ipm'));
+          const dPov = dYears.map(y => getValueForYear(ts, y, 'kemiskinan'));
+          const curIdx = dYears.indexOf(currentYear);
+          if (charts.detail) charts.detail.destroy();
+          charts.detail = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: dYears,
+              datasets: [
+                {
+                  label: 'IPM', data: dIpm,
+                  borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.1)',
+                  tension: .4, fill: true,
+                  pointRadius: dYears.map((_, i) => i === curIdx ? 7 : 2.5),
+                  pointHoverRadius: dYears.map((_, i) => i === curIdx ? 9 : 5),
+                  pointBackgroundColor: dYears.map((_, i) => i === curIdx ? '#fff' : '#3b82f6'),
+                  pointBorderColor: '#3b82f6', pointBorderWidth: dYears.map((_, i) => i === curIdx ? 2.5 : 1),
+                  yAxisID: 'y'
+                },
+                {
+                  label: 'Kemiskinan (%)', data: dPov,
+                  borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.08)',
+                  tension: .4, fill: true,
+                  pointRadius: dYears.map((_, i) => i === curIdx ? 7 : 2.5),
+                  pointHoverRadius: dYears.map((_, i) => i === curIdx ? 9 : 5),
+                  pointBackgroundColor: dYears.map((_, i) => i === curIdx ? '#fff' : '#f59e0b'),
+                  pointBorderColor: '#f59e0b', pointBorderWidth: dYears.map((_, i) => i === curIdx ? 2.5 : 1),
+                  yAxisID: 'y1'
+                }
+              ]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
+              interaction: { intersect: false, mode: 'index' },
+              plugins: {
+                yearMarker: { index: curIdx },
+                legend: { labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12 } },
+                tooltip: {
+                  backgroundColor: 'rgba(10,15,30,.92)', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1,
+                  titleColor: '#f1f5f9', bodyColor: '#94a3b8'
+                }
+              },
+              scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.04)' } },
+                y: { ticks: { color: '#3b82f6', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.04)' }, position: 'left' },
+                y1: { ticks: { color: '#f59e0b', font: { size: 9 } }, grid: { display: false }, position: 'right' }
+              }
+            }
+          });
+        }
+      }
+    }
+
+    // ============================================================
+    // MODE SWITCHING
+    // ============================================================
+    function setMode(mode, btn) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderGeoLayer();
+      buildLegend();
+      updateScatterChart();
+    }
+
+    // ============================================================
+    // YEAR SELECT
+    // ============================================================
+    function initYearSelect() {
+      const sel = document.getElementById('year-select');
+      STATS.years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y; opt.textContent = y;
+        if (y === 2024) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', () => {
+        setYear(parseInt(sel.value));
+      });
+      updateNavBtns();
+    }
+
+    function navYear(delta) {
+      const idx = STATS.years.indexOf(currentYear);
+      const next = STATS.years[Math.max(0, Math.min(STATS.years.length - 1, idx + delta))];
+      setYear(next);
+    }
+
+    function updateNavBtns() {
+      const idx = STATS.years.indexOf(currentYear);
+      const prev = document.getElementById('btn-year-prev');
+      const next = document.getElementById('btn-year-next');
+      if (prev) prev.style.opacity = idx <= 0 ? '0.25' : '1';
+      if (next) next.style.opacity = idx >= STATS.years.length - 1 ? '0.25' : '1';
+    }
+
+    // ============================================================
+    // CENTRAL YEAR CHANGE — keeps map, charts & stats in sync
+    // ============================================================
+    function setYear(year) {
+      if (year === currentYear) return;
+      currentYear = year;
+      const sel = document.getElementById('year-select');
+      if (sel && parseInt(sel.value) !== year) sel.value = year;
+      // Update live badge
+      const lb = document.getElementById('live-year-label');
+      if (lb) lb.textContent = `Live Data ${year}`;
+      updateNavBtns();
+      onYearChange();
+    }
+
+    function onYearChange() {
+      renderGeoLayer();
+      buildLegend();
+      updateTrendChart();
+      updateScatterChart();
+      updateProvChart();
+      updateYearStats();
+      // Perbarui daftar wilayah agar nilai IPM di list ikut tahun aktif
+      const searchVal = document.getElementById('search-wil')?.value || '';
+      buildWilayahList(searchVal);
+      // Re-buka popup & detail panel wilayah terpilih agar nilai ikut berubah
+      if (selectedName && geoLayer) {
+        geoLayer.eachLayer(l => {
+          if (l.feature && l.feature.properties.name_clean === selectedName) {
+            showPopup(l, l.feature.properties);
+            updateDetailPanel(selectedName, l.feature.properties);
+          }
+        });
+      }
+    }
+
+    // ============================================================
+    // LEGEND
+    // ============================================================
+    function buildLegend() {
+      const el = document.getElementById('legend-items');
+      if (!el) return;
+      let html = '';
+      if (currentMode === 'cluster') {
+        const counts = STATS.cluster_counts;
+        Object.entries(CLUSTER_COLORS).forEach(([k, c]) => {
+          const label = k === 'No Data' ? 'Tidak ada data' : k;
+          const dotClass = k === 'No Data' ? 'legend-dot no-data' : 'legend-dot';
+          const dotStyle = k === 'No Data' ? '' : `background:${c};color:${c}`;
+          html += `<div class="legend-item" onclick="toggleClusterHighlight('${k}')">
+        <div class="${dotClass}" style="${dotStyle}"></div>
+        <span>${label}</span>
+        <span class="legend-count">${counts[k] || 0}</span>
+      </div>`;
+        });
+      } else if (currentMode === 'ipm') {
+        const steps = [
+          ['≥ 80', '#16a34a', v => v >= 80],
+          ['75–80', '#84cc16', v => v >= 75 && v < 80],
+          ['70–75', '#2563eb', v => v >= 70 && v < 75],
+          ['65–70', '#0891b2', v => v >= 65 && v < 70],
+          ['60–65', '#d97706', v => v >= 60 && v < 65],
+          ['55–60', '#fb923c', v => v >= 55 && v < 60],
+          ['< 55', '#dc2626', v => v < 55],
+        ];
+        const counts = {};
+        steps.forEach(([l]) => counts[l] = 0);
+        counts['Tidak ada data'] = 0;
+        if (geojsonData && geojsonData.features) {
+          geojsonData.features.forEach(feat => {
+            const val = getFeatureValue(feat.properties);
+            if (val == null || isNaN(val)) {
+              counts['Tidak ada data']++;
+            } else {
+              let matched = false;
+              for (let i = 0; i < steps.length; i++) {
+                if (steps[i][2](val)) {
+                  counts[steps[i][0]]++;
+                  matched = true;
+                  break;
+                }
+              }
+              if (!matched) {
+                counts['Tidak ada data']++;
+              }
+            }
+          });
+        }
+        steps.forEach(([l, c]) => {
+          html += `<div class="legend-item" style="cursor:default">
+        <div class="legend-dot" style="background:${c};color:${c}"></div>
+        <span>${l}</span>
+        <span class="legend-count">${counts[l] || 0}</span>
+      </div>`;
+        });
+        html += `<div class="legend-item" style="cursor:default">
+      <div class="legend-dot no-data"></div>
+      <span>Tidak ada data</span>
+      <span class="legend-count">${counts['Tidak ada data'] || 0}</span>
+    </div>`;
+      } else {
+        const steps = [
+          ['≤ 5%', '#16a34a', v => v <= 5],
+          ['5–10%', '#84cc16', v => v > 5 && v <= 10],
+          ['10–15%', '#d97706', v => v > 10 && v <= 15],
+          ['15–20%', '#fb923c', v => v > 15 && v <= 20],
+          ['20–30%', '#dc2626', v => v > 20 && v <= 30],
+          ['> 30%', '#991b1b', v => v > 30],
+        ];
+        const counts = {};
+        steps.forEach(([l]) => counts[l] = 0);
+        counts['Tidak ada data'] = 0;
+        if (geojsonData && geojsonData.features) {
+          geojsonData.features.forEach(feat => {
+            const val = getFeatureValue(feat.properties);
+            if (val == null || isNaN(val)) {
+              counts['Tidak ada data']++;
+            } else {
+              let matched = false;
+              for (let i = 0; i < steps.length; i++) {
+                if (steps[i][2](val)) {
+                  counts[steps[i][0]]++;
+                  matched = true;
+                  break;
+                }
+              }
+              if (!matched) {
+                counts['Tidak ada data']++;
+              }
+            }
+          });
+        }
+        steps.forEach(([l, c]) => {
+          html += `<div class="legend-item" style="cursor:default">
+        <div class="legend-dot" style="background:${c};color:${c}"></div>
+        <span>${l}</span>
+        <span class="legend-count">${counts[l] || 0}</span>
+      </div>`;
+        });
+        html += `<div class="legend-item" style="cursor:default">
+      <div class="legend-dot no-data"></div>
+      <span>Tidak ada data</span>
+      <span class="legend-count">${counts['Tidak ada data'] || 0}</span>
+    </div>`;
+      }
+      el.innerHTML = html;
+    }
+
+    // ============================================================
+    // STATS
+    // ============================================================
+    function buildStats() {
+      // Total wilayah static
+      document.getElementById('s-total').textContent = STATS.total_wilayah;
+      // Statistik lainnya dihitung per tahun aktif dari timeseries
+      updateYearStats();
+    }
+
+    // ============================================================
+    // WILAYAH LIST
+    // ============================================================
+    function buildWilayahList(filter = '') {
+      const container = document.getElementById('wil-list');
+      if (!geojsonData) { container.innerHTML = '<div style="padding:20px;color:var(--text-muted)">Memuat...</div>'; return; }
+
+      const fl = filter.trim().toLowerCase();
+      const features = geojsonData.features.filter(f => {
+        const p = f.properties;
+        if (p.ipm_mean == null) return false;
+        // Cocokkan nama wilayah ATAU nama provinsi
+        const nm = (p.wilayah || p.name_clean || '').toLowerCase();
+        const pv = (p.prov_name || '').toLowerCase();
+        return fl === '' || nm.includes(fl) || pv.includes(fl);
+      });
+
+      // Sort by IPM tahun aktif dari timeseries
+      features.sort((a, b) => {
+        const ipmA = timeseriesData?.[a.properties.name_clean]
+          ? (getValueForYear(timeseriesData[a.properties.name_clean], currentYear, 'ipm') ?? 0)
+          : (a.properties.ipm_latest || 0);
+        const ipmB = timeseriesData?.[b.properties.name_clean]
+          ? (getValueForYear(timeseriesData[b.properties.name_clean], currentYear, 'ipm') ?? 0)
+          : (b.properties.ipm_latest || 0);
+        return ipmB - ipmA;
+      });
+
+      const html = features.slice(0, 150).map(f => {
+        const p = f.properties;
+        const nm = p.wilayah || p.name_clean;
+        const cc = CLUSTER_COLORS[p.cluster_label] || '#6b7280';
+        // Tampilkan IPM tahun aktif (fallback ke ipm_latest/ipm_mean jika tidak ada timeseries)
+        const ts = timeseriesData?.[p.name_clean];
+        const ipmVal = ts ? (getValueForYear(ts, currentYear, 'ipm') ?? parseNum(p.ipm_latest)) : parseNum(p.ipm_latest);
+        const ipmStr = ipmVal != null ? ipmVal.toFixed(1) : '–';
+        const isSelected = p.name_clean === selectedName;
+        return `<div class="wil-item${isSelected ? ' selected' : ''}" data-name="${p.name_clean}" onclick="selectFromList(this,'${p.name_clean}')">
+      <div class="wil-dot" style="background:${cc}"></div>
+      <div class="wil-info">
+        <div class="wil-name">${nm}</div>
+        <div class="wil-prov">${p.prov_name || ''}</div>
+      </div>
+      <div class="wil-ipm" title="IPM ${currentYear}">${ipmStr}</div>
+    </div>`;
+      }).join('');
+
+      container.innerHTML = html || `<div style="padding:20px;color:var(--text-muted);text-align:center"><i class="fas fa-search" style="display:block;font-size:24px;margin-bottom:8px;opacity:.4"></i>Tidak ada hasil untuk "${filter}"</div>`;
+    }
+
+    function selectFromList(el, name) {
+      const feat = geojsonData.features.find(f => f.properties.name_clean === name);
+      if (feat) selectWilayah(name, feat.properties);
+    }
+
+    function filterWilayah(val) { buildWilayahList(val); }
+
+    // ============================================================
+    // CLUSTER PANEL
+    // ============================================================
+    function buildClusterPanel() {
+      const counts = STATS.cluster_counts;
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+      // Overview cards
+      document.getElementById('cluster-overview').innerHTML =
+        Object.entries(CLUSTER_COLORS).filter(([k]) => k !== 'No Data').map(([k, c]) => {
+          const n = counts[k] || 0;
+          return `<div class="cluster-card" style="--c-color:${c}" onclick="highlightCluster('${k}')">
+        <div class="cc-label" style="color:${c}">${k}</div>
+        <div class="cc-count" style="color:${c}">${n}</div>
+        <div class="cc-sub">wilayah · ${((n / total) * 100).toFixed(1)}%</div>
+        <div class="cc-bar" style="width:${((n / total) * 100).toFixed(1)}%"></div>
+      </div>`;
+        }).join('');
+
+      // Descriptions
+      document.getElementById('cluster-desc').innerHTML =
+        Object.entries(CLUSTER_DESC).map(([k, d]) => {
+          const c = CLUSTER_COLORS[k];
+          return `<div style="display:flex;gap:10px;padding:8px;margin-bottom:6px;background:var(--glass-bg);border:1px solid var(--glass-border);border-left:3px solid ${c};border-radius:var(--radius-sm)">
+        <i class="${d.icon}" style="color:${c};margin-top:2px;font-size:13px"></i>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--text-secondary)">${k}: ${d.label}</div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin-top:2px">${d.sub}</div>
+        </div>
+      </div>`;
+        }).join('');
+
+      // Bar chart (IPM per cluster)
+      const ctx = document.getElementById('chart-cluster-bar')?.getContext('2d');
+      if (ctx) {
+        if (charts.clusterBar) charts.clusterBar.destroy();
+        const labels = Object.keys(CLUSTER_COLORS).filter(k => k !== 'No Data');
+        if (clusterData) {
+          const ipmByCluster = {};
+          labels.forEach(k => {
+            const ws = clusterData.filter(d => d.cluster === k);
+            ipmByCluster[k] = ws.length ? ws.reduce((a, b) => a + b.ipm_mean, 0) / ws.length : 0;
+          });
+          charts.clusterBar = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [{
+                label: 'IPM Rata-rata',
+                data: labels.map(k => +ipmByCluster[k].toFixed(2)),
+                backgroundColor: labels.map(k => CLUSTER_COLORS[k] + '99'),
+                borderColor: labels.map(k => CLUSTER_COLORS[k]),
+                borderWidth: 1, borderRadius: 6
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false, animation: { duration: 800 },
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+                y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' }, min: 40 }
+              }
+            }
+          });
+        }
+      }
+    }
+
+    // ============================================================
+    // CLUSTER FILTER
+    // ============================================================
+    function buildClusterFilterList() {
+      const el = document.getElementById('cluster-filter-list');
+      if (!el) return;
+      el.innerHTML = Object.entries(CLUSTER_COLORS).filter(([k]) => k !== 'No Data').map(([k, c]) => {
+        const active = activeFilters.clusters.has(k);
+        const id = 'cf-' + k.replace(/\s+/g, '');
+        return `<div class="legend-item" id="cli-${id}" onclick="toggleClusterFilter('${k}',this)" style="margin-bottom:4px;opacity:${active ? 1 : 0.4};cursor:pointer;transition:opacity .2s">
+      <div class="legend-dot" style="background:${c}"></div>
+      <span>${k}</span>
+      <i class="fas fa-check" style="margin-left:auto;color:${c};font-size:10px;opacity:${active ? 1 : 0}" id="${id}-chk"></i>
+    </div>`;
+      }).join('');
+    }
+
+    function toggleClusterFilter(k, el) {
+      if (activeFilters.clusters.has(k)) {
+        if (activeFilters.clusters.size <= 1) return; // jangan hapus semua
+        activeFilters.clusters.delete(k);
+      } else {
+        activeFilters.clusters.add(k);
+      }
+      buildClusterFilterList();
+      renderGeoLayer();
+    }
+
+    function applyFilters() {
+      activeFilters.ipmMin = +document.getElementById('ipm-min').value;
+      activeFilters.ipmMax = +document.getElementById('ipm-max').value;
+      activeFilters.povMin = +document.getElementById('pov-min').value;
+      activeFilters.povMax = +document.getElementById('pov-max').value;
+      document.getElementById('ipm-min-val').textContent = activeFilters.ipmMin;
+      document.getElementById('ipm-max-val').textContent = activeFilters.ipmMax;
+      document.getElementById('pov-min-val').textContent = activeFilters.povMin;
+      document.getElementById('pov-max-val').textContent = activeFilters.povMax;
+      renderGeoLayer();
+    }
+
+    function resetFilters() {
+      activeFilters = { clusters: new Set(['Klaster 1', 'Klaster 2', 'Klaster 3', 'Klaster 4', 'No Data']), ipmMin: 0, ipmMax: 100, povMin: 0, povMax: 50 };
+      document.getElementById('ipm-min').value = 0; document.getElementById('ipm-max').value = 100;
+      document.getElementById('pov-min').value = 0; document.getElementById('pov-max').value = 50;
+      document.getElementById('ipm-min-val').textContent = 0;
+      document.getElementById('ipm-max-val').textContent = 100;
+      document.getElementById('pov-min-val').textContent = 0;
+      document.getElementById('pov-max-val').textContent = 50;
+      renderGeoLayer();
+      buildClusterFilterList();
+    }
+
+    function highlightCluster(k) {
+      activeFilters.clusters = new Set([k]);
+      renderGeoLayer();
+      buildClusterFilterList();
+    }
+
+    function toggleClusterHighlight(k) {
+      if (activeFilters.clusters.size === 1 && activeFilters.clusters.has(k)) {
+        activeFilters.clusters = new Set(['Klaster 1', 'Klaster 2', 'Klaster 3', 'Klaster 4', 'No Data']);
+      } else {
+        activeFilters.clusters = new Set([k]);
+      }
+      renderGeoLayer();
+      buildClusterFilterList();
+    }
+
+    // ============================================================
+    // LAYER TOGGLE
+    // ============================================================
+    function toggleLayer(layer, btn) {
+      btn.classList.toggle('on');
+      if (layer === 'labels') {
+        if (btn.classList.contains('on')) {
+          window.labelLayer.addTo(map);
+        } else {
+          map.removeLayer(window.labelLayer);
+        }
+      }
+    }
+
+    // ============================================================
+    // BOTTOM PANEL TOGGLE
+    // ============================================================
+    function toggleBottomPanel() {
+      bottomCollapsed = !bottomCollapsed;
+      document.getElementById('bottom-panel').classList.toggle('collapsed', bottomCollapsed);
+      document.getElementById('bp-icon').className = bottomCollapsed ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+    }
+
+    // ============================================================
+    // SIDEBAR TOGGLE
+    // ============================================================
+    let sidebarCollapsed = false;
+    function toggleSidebar() {
+      sidebarCollapsed = !sidebarCollapsed;
+      const app = document.getElementById('app');
+      const icon = document.getElementById('sidebar-toggle-icon');
+      app.classList.toggle('sidebar-collapsed', sidebarCollapsed);
+      icon.className = sidebarCollapsed ? 'fas fa-indent' : 'fas fa-bars';
+      // Let the map recalculate its size after transition
+      setTimeout(() => { if (window.map) map.invalidateSize(); }, 400);
+    }
+
+    // ============================================================
+    // SIDEBAR TABS
+    // ============================================================
+    function switchTab(name, el) {
+      document.querySelectorAll('.s-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      const panel = document.getElementById(`panel-${name}`);
+      if (panel) panel.classList.add('active');
+      // Auto-open sidebar if collapsed when switching tabs
+      if (sidebarCollapsed) toggleSidebar();
+    }
+
+    // ============================================================
+    // CHARTS
+    // ============================================================
+    function initCharts() {
+      buildTrendChart();
+      buildScatterChart();
+      buildProvChart();
+    }
+
+    // Custom Chart.js plugin: draws a dashed vertical guide line at the
+    // currently active year so the trend chart visually syncs with the
+    // year selector / map / other charts.
+    const yearMarkerPlugin = {
+      id: 'yearMarker',
+      afterDatasetsDraw(chart) {
+        const idx = chart.config.options?.plugins?.yearMarker?.index;
+        if (idx == null || idx < 0) return;
+        const { ctx, chartArea, scales } = chart;
+        if (!chartArea || !scales.x) return;
+        const xPos = scales.x.getPixelForValue(idx);
+        if (!isFinite(xPos)) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(xPos, chartArea.top);
+        ctx.lineTo(xPos, chartArea.bottom);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(37,99,235,0.45)';
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.restore();
+      }
+    };
+    Chart.register(yearMarkerPlugin);
+
+    // ── TREND CHART ── (Tren IPM Nasional 2015–2024, selalu menampilkan
+    // seluruh rentang tahun, namun titik tahun aktif ditonjolkan & dapat
+    // diklik untuk langsung mengganti filter tahun di seluruh dashboard)
+    function buildTrendChart() {
+      const ctx = document.getElementById('chart-trend')?.getContext('2d');
+      if (!ctx || !timeseriesData) return;
+
+      const { years, ipmAvg, povAvg } = computeNationalYearly();
+      const curIdx = years.indexOf(currentYear);
+
+      const badge = document.getElementById('trend-year-badge');
+      if (badge) {
+        const ipmTxt = curIdx >= 0 && ipmAvg[curIdx] != null ? ipmAvg[curIdx].toFixed(2) : '-';
+        const povTxt = curIdx >= 0 && povAvg[curIdx] != null ? povAvg[curIdx].toFixed(2) : '-';
+        badge.textContent = `${currentYear} • IPM ${ipmTxt} • Miskin ${povTxt}%`;
+      }
+
+      const ptR = (i) => i === curIdx ? 7 : 3;
+      const ptHR = (i) => i === curIdx ? 9 : 5;
+      const ptBW = (i) => i === curIdx ? 3 : 1;
+
+      if (charts.trend) charts.trend.destroy();
+      charts.trend = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: [
+            {
+              label: 'IPM Nasional', data: ipmAvg,
+              borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.12)',
+              tension: .4, fill: true, yAxisID: 'y',
+              pointRadius: years.map((_, i) => ptR(i)), pointHoverRadius: years.map((_, i) => ptHR(i)),
+              pointBorderWidth: years.map((_, i) => ptBW(i)),
+              pointBackgroundColor: years.map((_, i) => i === curIdx ? '#fff' : '#3b82f6'),
+              pointBorderColor: '#3b82f6'
+            },
+            {
+              label: 'Kemiskinan (%)', data: povAvg,
+              borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.08)',
+              tension: .4, fill: true, yAxisID: 'y1',
+              pointRadius: years.map((_, i) => ptR(i)), pointHoverRadius: years.map((_, i) => ptHR(i)),
+              pointBorderWidth: years.map((_, i) => ptBW(i)),
+              pointBackgroundColor: years.map((_, i) => i === curIdx ? '#fff' : '#f59e0b'),
+              pointBorderColor: '#f59e0b'
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
+          interaction: { intersect: false, mode: 'index' },
+          onHover: (evt, els, chart) => { chart.canvas.style.cursor = els.length ? 'pointer' : 'default'; },
+          onClick: (evt, els, chart) => {
+            const pts = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+            if (pts.length) setYear(years[pts[0].index]);
+          },
+          plugins: {
+            yearMarker: { index: curIdx },
+            legend: { labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12 } },
+            tooltip: {
+              backgroundColor: 'rgba(10,15,30,.95)', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1,
+              titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+              callbacks: { footer: items => items[0]?.dataIndex === curIdx ? '● Tahun aktif (klik titik lain untuk ganti)' : 'Klik untuk pilih tahun ini' }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+            y: { ticks: { color: '#3b82f6', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,.06)' }, position: 'left' },
+            y1: { ticks: { color: '#f59e0b', font: { size: 9 } }, grid: { display: false }, position: 'right' }
+          }
+        }
+      });
+    }
+
+    function updateTrendChart() { buildTrendChart(); }
+
+    // ── SCATTER CHART ── (IPM vs Kemiskinan, dihitung ulang dari data
+    // per-tahun sehingga selalu sinkron dengan tahun yang dipilih)
+    function buildScatterChart() {
+      const ctx = document.getElementById('chart-scatter')?.getContext('2d');
+      if (!ctx || !timeseriesData) return;
+
+      const points = getScatterDataForYear(currentYear);
+
+      const badge = document.getElementById('scatter-year-badge');
+      if (badge) badge.textContent = `${currentYear} • n=${points.length}`;
+
+      const datasets = Object.entries(CLUSTER_COLORS).map(([k, c]) => {
+        const data = points.filter(d => d.cluster === k);
+        if (!data.length) return null;
+        return { label: k, data, backgroundColor: c + '90', borderColor: c, pointRadius: 4, pointHoverRadius: 7, pointHoverBorderWidth: 2 };
+      }).filter(Boolean);
+
+      if (charts.scatter) charts.scatter.destroy();
+      charts.scatter = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 500 },
+          onHover: (evt, els, chart) => { chart.canvas.style.cursor = els.length ? 'pointer' : 'default'; },
+          onClick: (evt, els, chart) => {
+            if (!els.length) return;
+            const el = els[0];
+            const point = chart.data.datasets[el.datasetIndex].data[el.index];
+            if (point?.key && geojsonData) {
+              const feat = geojsonData.features.find(f => f.properties.name_clean === point.key);
+              if (feat) selectWilayah(point.key, feat.properties);
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 10 } },
+            tooltip: {
+              backgroundColor: 'rgba(10,15,30,.95)', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1,
+              titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+              callbacks: { label: ctx => `${ctx.raw.name}: IPM ${ctx.raw.x.toFixed(1)}, Kemiskinan ${ctx.raw.y.toFixed(1)}% (${currentYear})` }
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: `IPM — ${currentYear}`, color: '#64748b', font: { size: 9 } }, ticks: { color: '#64748b', font: { size: 8 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+            y: { title: { display: true, text: 'Kemiskinan (%)', color: '#64748b', font: { size: 9 } }, ticks: { color: '#64748b', font: { size: 8 } }, grid: { color: 'rgba(0,0,0,.06)' } }
+          }
+        }
+      });
+    }
+
+    function updateScatterChart() { buildScatterChart(); }
+
+    // ── PROVINCE CHART ── (Distribusi IPM per Provinsi Top 10, dihitung
+    // ulang dari data per-tahun sehingga mengikuti filter tahun aktif)
+    function buildProvChart() {
+      const ctx = document.getElementById('chart-prov')?.getContext('2d');
+      if (!ctx || !timeseriesData) return;
+
+      const sorted = getProvinceTop10ForYear(currentYear);
+
+      const badge = document.getElementById('prov-year-badge');
+      if (badge) badge.textContent = currentYear;
+
+      if (charts.prov) charts.prov.destroy();
+      charts.prov = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: sorted.map(d => d.name.length > 12 ? d.name.slice(0, 12) + '…' : d.name),
+          datasets: [{
+            label: 'IPM Rata-rata',
+            data: sorted.map(d => +d.avg.toFixed(2)),
+            backgroundColor: sorted.map((_, i) => `hsl(${220 + i * 8},70%,${60 - i * 2}%)`),
+            borderRadius: 4, borderWidth: 0
+          }]
+        },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 600 },
+          onHover: (evt, els, chart) => { chart.canvas.style.cursor = els.length ? 'pointer' : 'default'; },
+          onClick: (evt, els) => {
+            if (!els.length) return;
+            const d = sorted[els[0].index];
+            if (d) filterByProvince(d.name);
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(10,15,30,.95)', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1, titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+              callbacks: {
+                title: items => sorted[items[0].dataIndex]?.name || '',
+                label: item => `IPM rata-rata ${currentYear}: ${item.raw} (${sorted[item.dataIndex].cnt} wilayah) — klik untuk lihat daftar`
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#64748b', font: { size: 8 } }, grid: { color: 'rgba(0,0,0,.06)' } },
+            y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateProvChart() { buildProvChart(); }
+
+    // Klik bar provinsi → tampilkan daftar wilayah yang berasal dari provinsi tsb
+    function filterByProvince(provName) {
+      switchTab('wilayah', document.querySelectorAll('.s-tab')[0]);
+      const input = document.getElementById('search-wil');
+      if (input) { input.value = provName; input.dispatchEvent(new Event('input')); }
+      buildWilayahList(provName);
+    }
+
+    // Statistik header (kartu IPM/Kemiskinan Nasional & tertinggi) ikut
+    // diperbarui sesuai tahun aktif agar selalu akurat & tidak menyesatkan.
+    function updateYearStats() {
+      const { years, ipmAvg, povAvg } = computeNationalYearly();
+      const idx = years.indexOf(currentYear);
+      const ipmVal = idx >= 0 ? ipmAvg[idx] : null;
+      const povVal = idx >= 0 ? povAvg[idx] : null;
+      const prevIpm = idx > 0 ? ipmAvg[idx - 1] : null;
+      const prevPov = idx > 0 ? povAvg[idx - 1] : null;
+
+      const elIpmLabel = document.getElementById('s-ipm-label');
+      const elPovLabel = document.getElementById('s-pov-label');
+      if (elIpmLabel) elIpmLabel.textContent = `IPM Nasional ${currentYear}`;
+      if (elPovLabel) elPovLabel.textContent = `Kemiskinan Nasional ${currentYear}`;
+
+      const elIpm = document.getElementById('s-ipm');
+      if (elIpm) elIpm.textContent = ipmVal != null ? ipmVal.toFixed(2) : '-';
+      const elPov = document.getElementById('s-pov');
+      if (elPov) elPov.innerHTML = (povVal != null ? povVal.toFixed(2) : '-') + '<span style="font-size:14px">%</span>';
+
+      const elIpmTrend = document.getElementById('s-ipm-trend');
+      if (elIpmTrend) {
+        if (prevIpm != null && ipmVal != null) {
+          const diff = +(ipmVal - prevIpm).toFixed(2);
+          elIpmTrend.textContent = (diff >= 0 ? '▲ +' : '▼ ') + Math.abs(diff).toFixed(2);
+          elIpmTrend.className = 'sc-trend ' + (diff >= 0 ? 'trend-up' : 'trend-down');
+        } else { elIpmTrend.textContent = '—'; elIpmTrend.className = 'sc-trend'; }
+      }
+      const elPovTrend = document.getElementById('s-pov-trend');
+      if (elPovTrend) {
+        if (prevPov != null && povVal != null) {
+          const diff = +(povVal - prevPov).toFixed(2);
+          elPovTrend.textContent = (diff <= 0 ? '▼ ' : '▲ +') + Math.abs(diff).toFixed(2);
+          elPovTrend.className = 'sc-trend ' + (diff <= 0 ? 'trend-down' : 'trend-up');
+        } else { elPovTrend.textContent = '—'; elPovTrend.className = 'sc-trend'; }
+      }
+
+      // Wilayah dengan IPM tertinggi & kemiskinan tertinggi pada tahun aktif
+      let topIpm = { nama: '-', nilai: null }, topPov = { nama: '-', nilai: null };
+      if (timeseriesData) {
+        Object.entries(timeseriesData).forEach(([key, ts]) => {
+          const iv = getValueForYear(ts, currentYear, 'ipm');
+          if (iv != null && (topIpm.nilai == null || iv > topIpm.nilai)) topIpm = { nama: ts.wilayah || key, nilai: iv };
+          const pv = getValueForYear(ts, currentYear, 'kemiskinan');
+          if (pv != null && (topPov.nilai == null || pv > topPov.nilai)) topPov = { nama: ts.wilayah || key, nilai: pv };
+        });
+      }
+      const elIpmTop = document.getElementById('s-ipm-top');
+      if (elIpmTop) elIpmTop.textContent = topIpm.nilai != null ? topIpm.nilai.toFixed(2) : '-';
+      const elIpmTopName = document.getElementById('s-ipm-top-name');
+      if (elIpmTopName) elIpmTopName.textContent = topIpm.nama;
+      const elPovTop = document.getElementById('s-pov-top');
+      if (elPovTop) elPovTop.innerHTML = (topPov.nilai != null ? topPov.nilai.toFixed(2) : '-') + '<span style="font-size:12px">%</span>';
+      const elPovTopName = document.getElementById('s-pov-top-name');
+      if (elPovTopName) elPovTopName.textContent = topPov.nama;
+    }
+
+    // ============================================================
+    // RESIZE
+    // ============================================================
+    window.addEventListener('resize', () => {
+      Object.values(charts).forEach(c => c && c.resize && c.resize());
+      if (map) map.invalidateSize();
+    });
+
+    // ============================================================
+    // KEYBOARD SHORTCUTS
+    // ============================================================
+    document.addEventListener('keydown', e => {
+      // Jangan intercept keyboard saat input aktif
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+      if (e.key === 'Escape' && selectedName) {
+        selectedName = null;
+        renderGeoLayer();
+        map.closePopup();
+      }
+      if (e.key === '1') setMode('ipm', document.getElementById('btn-ipm'));
+      if (e.key === '2') setMode('kemiskinan', document.getElementById('btn-kemiskinan'));
+      if (e.key === '3') setMode('cluster', document.getElementById('btn-cluster'));
+      if (e.key === 'ArrowLeft' || e.key === ',') navYear(-1);
+      if (e.key === 'ArrowRight' || e.key === '.') navYear(1);
+    });
+  </script>
+</body>
+
+</html>

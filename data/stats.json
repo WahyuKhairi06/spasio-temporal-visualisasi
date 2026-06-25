@@ -1,0 +1,42 @@
+{
+  "total_wilayah": 488,
+  "latest_year": 2024,
+  "ipm_nasional": 71.92,
+  "kemiskinan_nasional": 11.99,
+  "ipm_tertinggi": {
+    "nama": "Kota Yogyakarta",
+    "nilai": 88.77
+  },
+  "ipm_terendah": {
+    "nama": "Nduga",
+    "nilai": 36.3
+  },
+  "kemiskinan_tertinggi": {
+    "nama": "Intan Jaya",
+    "nilai": 41.42
+  },
+  "cluster_counts": {
+    "Klaster 1": 228,
+    "Klaster 3": 204,
+    "Klaster 4": 41,
+    "Klaster 2": 15
+  },
+  "years": [
+    2015,
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+  ],
+  "color_map": {
+    "Klaster 1": "#22c55e",
+    "Klaster 2": "#3b82f6",
+    "Klaster 3": "#f59e0b",
+    "Klaster 4": "#ef4444"
+  }
+}
